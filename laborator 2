@@ -1,0 +1,217 @@
+//punctul a
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+
+struct Software {
+    std::string denumire;
+    std::string firmaDeProducere;
+    int anulEditarii;
+    std::string versiune;
+};
+
+bool CitesteProduseDinFisier(const std::string& numeFisier, std::vector<Software>& produse) {
+    std::ifstream fisier(numeFisier);
+    if (fisier) {
+        produse.clear();
+
+        Software produs;
+        while (getline(fisier, produs.denumire)) {
+            if (produs.denumire.empty()) {
+                break; 
+
+            getline(fisier, produs.firmaDeProducere);
+            fisier >> produs.anulEditarii;
+            fisier.ignore(); 
+            getline(fisier, produs.versiune);
+            produse.push_back(produs);
+        }
+
+        fisier.close();
+        return true;
+    }
+    return false;
+}
+
+
+void ScrieProduseInFisier(const std::string& numeFisier, const std::vector<Software>& produse) {
+    std::ofstream fisier(numeFisier);
+    if (fisier) {
+        for (const Software& produs : produse) {
+            fisier << produs.denumire << std::endl;
+            fisier << produs.firmaDeProducere << std::endl;
+            fisier << produs.anulEditarii << std::endl;
+            fisier << produs.versiune << std::endl;
+        }
+        fisier.close();
+    }
+}
+
+void AfiseazaProdus(const Software& produs) {
+    std::cout << "Denumire: " << produs.denumire << std::endl;
+    std::cout << "Firma de producere: " << produs.firmaDeProducere << std::endl;
+    std::cout << "Anul editării: " << produs.anulEditarii << std::endl;
+    std::cout << "Versiune: " << produs.versiune << std::endl;
+}
+
+void AfiseazaProduse(const std::vector<Software>& produse) {
+    for (const Software& produs : produse) {
+        AfiseazaProdus(produs);
+        std::cout << std::endl;
+    }
+}
+
+void Meniu(const std::string& numeFisier, std::vector<Software>& produse) {
+    int optiune;
+    do {
+        std::cout << "Meniu:" << std::endl;
+        std::cout << "1. Citeste produse din fisier" << std::endl;
+        std::cout << "2. Afiseaza produse" << std::endl;
+        std::cout << "3. Adauga/Modifica produs" << std::endl;
+        std::cout << "4. Salveaza produse in fisier" << std::endl;
+        std::cout << "5. Iesire" << std::endl;
+        std::cout << "Selectati o optiune: ";
+        std::cin >> optiune;
+
+        switch (optiune) {
+            case 1:
+                if (CitesteProduseDinFisier(numeFisier, produse)) {
+                    std::cout << "Produsele au fost citite din fisier." << std::endl;
+                } else {
+                    std::cout << "Nu am putut citi produsele din fisier." << std::endl;
+                }
+                break;
+            case 2:
+                if (produse.empty()) {
+                    std::cout << "Nu exista produse de afisat. Va rugam sa cititi produsele mai intai." << std::endl;
+                } else {
+                    std::cout << "Produsele software din fisier sunt:" << std::endl;
+                    AfiseazaProduse(produse);
+                }
+                break;
+            case 3: {
+                std::cin.ignore();
+                Software produs;
+                std::cout << "Introduceti denumirea: ";
+                getline(std::cin, produs.denumire);
+                std::cout << "Introduceti firma de producere: ";
+                getline(std::cin, produs.firmaDeProducere);
+                std::cout << "Introduceti anul editarii: ";
+                std::cin >> produs.anulEditarii;
+                std::cin.ignore();
+                std::cout << "Introduceti versiunea: ";
+                getline(std::cin, produs.versiune);
+                produse.push_back(produs);
+                std::cout << "Produsul a fost adaugat/modificat." << std::endl;
+                break;
+            }
+            case 4:
+                ScrieProduseInFisier(numeFisier, produse);
+                std::cout << "Produsele au fost salvate in fisier." << std::endl;
+                break;
+            case 5:
+                std::cout << "Programul se inchide." << std::endl;
+                break;
+            default:
+                std::cout << "Optiune invalida. Va rugam sa selectati o optiune valida." << std::endl;
+        }
+    } while (optiune != 5);
+}
+
+int main() {
+    std::string numeFisier = "software.txt";
+    std::vector<Software> produse;
+    Meniu(numeFisier, produse);
+    return 0;
+}
+
+
+
+
+
+
+
+
+//punctul b
+#include <iostream>
+
+struct Vector {
+    double* elements;
+    int size;
+};
+
+void init(Vector& vec, int size) {
+    vec.elements = new double[size];
+    vec.size = size;
+}
+
+void destroy(Vector& vec) {
+    delete[] vec.elements;
+    vec.size = 0;
+}
+
+void resize(Vector& vec, int newSize) {
+    double* newElements = new double[newSize];
+    for (int i = 0; i < std::min(vec.size, newSize); ++i) {
+        newElements[i] = vec.elements[i];
+    }
+    delete[] vec.elements;
+    vec.elements = newElements;
+    vec.size = newSize;
+}
+
+void readValues(Vector& vec) {
+    std::cout << "Introduceti valorile pentru vector: ";
+    for (int i = 0; i < vec.size; ++i) {
+        std::cin >> vec.elements[i];
+    }
+}
+
+void printValues(const Vector& vec) {
+    std::cout << "Valorile vectorului sunt: ";
+    for (int i = 0; i < vec.size; ++i) {
+        std::cout << vec.elements[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+double sumOfEvenElements(const Vector& vec) {
+    double sum = 0.0;
+    for (int i = 0; i < vec.size; ++i) {
+        if (i % 2 == 0) {
+            sum += vec.elements[i];
+        }
+    }
+    return sum;
+}
+
+int main() {
+    Vector myVector;
+
+    int size;
+    std::cout << "Introduceti dimensiunea vectorului: ";
+    std::cin >> size;
+
+    init(myVector, size);
+
+    readValues(myVector);
+
+    printValues(myVector);
+
+    double numarImpar;
+    std::cout << "Introduceti un numar impar pentru inmultire: ";
+    std::cin >> numarImpar;
+
+    for (int i = 0; i < myVector.size; ++i) {
+        myVector.elements[i] *= numarImpar;
+    }
+
+    std::cout << "Vectorul dupa inmultire cu numarul impar:" << std::endl;
+    printValues(myVector);
+
+    destroy(myVector);
+
+    return 0;
+}
+

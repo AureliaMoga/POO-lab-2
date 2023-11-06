@@ -1,217 +1,204 @@
-//punctul a
+a)
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <vector>
+#include <ctime>
 
-struct Software {
-    std::string denumire;
-    std::string firmaDeProducere;
-    int anulEditarii;
-    std::string versiune;
+class SoftFile {
+private:
+    std::string fileName;   // Numele complet al fișierului
+    std::string fileExtension;  // Anexa de asociere
+    time_t creationTime;  // Data și timpul creării
+
+public:
+    SoftFile() {
+        fileName = "";
+        fileExtension = "";
+        creationTime = time(0);  // Obține data și timpul curent
+    }
+
+    SoftFile(const std::string& fileName, const std::string& fileExtension) {
+        this->fileName = fileName;
+        this->fileExtension = fileExtension;
+        creationTime = time(0);  // Obține data și timpul curent
+    }
+
+    SoftFile(const std::string& fileName) {
+        this->fileName = fileName;
+        // Extrage anexa de asociere din nume (ultima parte după punct)
+        size_t dotPos = fileName.find_last_of(".");
+        if (dotPos != std::string::npos) {
+            this->fileExtension = fileName.substr(dotPos + 1);
+        } else {
+            this->fileExtension = "";
+        }
+        creationTime = time(0);  // Obține data și timpul curent
+    }
+
+    void renameFile(const std::string& newFileName) {
+        fileName = newFileName;
+    }
+
+    void moveFileToDirectory(const std::string& newDirectory) {
+        std::cout << "Fișierul '" << fileName << "' a fost transferat în directorul '" << newDirectory << "'." << std::endl;
+    }
+
+    void changeFileExtension(const std::string& newExtension) {
+        fileExtension = newExtension;
+    }
+
+    std::string getFileName() const {
+        return fileName;
+    }
+
+    std::string getFileExtension() const {
+        return fileExtension;
+    }
 };
 
-bool CitesteProduseDinFisier(const std::string& numeFisier, std::vector<Software>& produse) {
-    std::ifstream fisier(numeFisier);
-    if (fisier) {
-        produse.clear();
+int main() {
+    SoftFile myFile("document.doc");
+    
+    std::cout << "Numele fișierului: " << myFile.getFileName() << std::endl;
+    std::cout << "Anexa de asociere: " << myFile.getFileExtension() << std::endl;
 
-        Software produs;
-        while (getline(fisier, produs.denumire)) {
-            if (produs.denumire.empty()) {
-                break; 
+    myFile.renameFile("new_document.doc");
+    std::cout << "Noul nume al fișierului: " << myFile.getFileName() << std::endl;
 
-            getline(fisier, produs.firmaDeProducere);
-            fisier >> produs.anulEditarii;
-            fisier.ignore(); 
-            getline(fisier, produs.versiune);
-            produse.push_back(produs);
+    myFile.moveFileToDirectory("/path/to/new/directory");
+    
+    myFile.changeFileExtension("pdf");
+    std::cout << "Noua anexă de asociere: " << myFile.getFileExtension() << std::endl;
+
+    return 0;
+}
+
+
+b)#include <iostream>
+#include <stdexcept>
+
+class Matrix {
+private:
+    long* data;      // Pointer către elementele matricei
+    int numRows;     // Numărul de rânduri
+    int numCols;     // Numărul de coloane
+    int errorCode;   // Codul erorii
+
+public:
+    Matrix() : data(nullptr), numRows(0), numCols(0), errorCode(0) {}
+
+    Matrix(int size) : data(nullptr), numRows(size), numCols(size), errorCode(0) {
+        initializeMatrix();
+    }
+
+    Matrix(int rows, int cols) : data(nullptr), numRows(rows), numCols(cols), errorCode(0) {
+        initializeMatrix();
+    }
+
+    ~Matrix() {
+        delete[] data;
+    }
+
+    long& at(int i, int j) {
+        if (i < 0 || i >= numRows || j < 0 || j >= numCols) {
+            errorCode = 1; // Cod de eroare pentru depășirea limitelor matricei
+            throw std::out_of_range("Index out of range.");
+        }
+        return data[i * numCols + j];
+    }
+
+    long at(int i, int j) const {
+        if (i < 0 || i >= numRows || j < 0 || j >= numCols) {
+            throw std::out_of_range("Index out of range.");
+        }
+        return data[i * numCols + j];
+    }
+
+    Matrix operator+(const Matrix& other) {
+        if (numRows != other.numRows || numCols != other.numCols) {
+            errorCode = 2; // Cod de eroare pentru dimensiuni incompatibile
+            throw std::invalid_argument("Matrix dimensions are not compatible for addition.");
         }
 
-        fisier.close();
-        return true;
-    }
-    return false;
-}
+        Matrix result(numRows, numCols);
 
-
-void ScrieProduseInFisier(const std::string& numeFisier, const std::vector<Software>& produse) {
-    std::ofstream fisier(numeFisier);
-    if (fisier) {
-        for (const Software& produs : produse) {
-            fisier << produs.denumire << std::endl;
-            fisier << produs.firmaDeProducere << std::endl;
-            fisier << produs.anulEditarii << std::endl;
-            fisier << produs.versiune << std::endl;
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                result.data[i * numCols + j] = data[i * numCols + j] + other.data[i * numCols + j];
+            }
         }
-        fisier.close();
+
+        return result;
     }
+
+    void set(int i, int j, long value) {
+        if (i < 0 || i >= numRows || j < 0 || j >= numCols) {
+            errorCode = 1; // Cod de eroare pentru depășirea limitelor matricei
+            throw std::out_of_range("Index out of range.");
+        }
+        data[i * numCols + j] = value;
+    }
+
+    int getRows() const {
+        return numRows;
+    }
+
+    // Funcție pentru a obține numărul de coloane
+    int getCols() const {
+        return numCols;
+    }
+
+    // Funcție pentru a obține codul erorii
+    int getErrorCode() const {
+        return errorCode;
+    }
+
+private:
+    void initializeMatrix() {
+        data = new long[numRows * numCols]();
+    }
+};
+
+Matrix readMatrixFromUser() {
+    int rows, cols;
+    std::cout << "Introduceti numarul de randuri: ";
+    std::cin >> rows;
+    std::cout << "Introduceti numarul de coloane: ";
+    std::cin >> cols;
+
+    Matrix matrix(rows, cols);
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            std::cout << "Introduceti elementul de pe pozitia (" << i << ", " << j << "): ";
+            long value;
+            std::cin >> value;
+            matrix.set(i, j, value);
+        }
+    }
+
+    return matrix;
 }
 
-void AfiseazaProdus(const Software& produs) {
-    std::cout << "Denumire: " << produs.denumire << std::endl;
-    std::cout << "Firma de producere: " << produs.firmaDeProducere << std::endl;
-    std::cout << "Anul editării: " << produs.anulEditarii << std::endl;
-    std::cout << "Versiune: " << produs.versiune << std::endl;
-}
+void printMatrix(const Matrix& matrix) {
+    int rows = matrix.getRows();
+    int cols = matrix.getCols();
 
-void AfiseazaProduse(const std::vector<Software>& produse) {
-    for (const Software& produs : produse) {
-        AfiseazaProdus(produs);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            std::cout << matrix.at(i, j) << " ";
+        }
         std::cout << std::endl;
     }
 }
 
-void Meniu(const std::string& numeFisier, std::vector<Software>& produse) {
-    int optiune;
-    do {
-        std::cout << "Meniu:" << std::endl;
-        std::cout << "1. Citeste produse din fisier" << std::endl;
-        std::cout << "2. Afiseaza produse" << std::endl;
-        std::cout << "3. Adauga/Modifica produs" << std::endl;
-        std::cout << "4. Salveaza produse in fisier" << std::endl;
-        std::cout << "5. Iesire" << std::endl;
-        std::cout << "Selectati o optiune: ";
-        std::cin >> optiune;
-
-        switch (optiune) {
-            case 1:
-                if (CitesteProduseDinFisier(numeFisier, produse)) {
-                    std::cout << "Produsele au fost citite din fisier." << std::endl;
-                } else {
-                    std::cout << "Nu am putut citi produsele din fisier." << std::endl;
-                }
-                break;
-            case 2:
-                if (produse.empty()) {
-                    std::cout << "Nu exista produse de afisat. Va rugam sa cititi produsele mai intai." << std::endl;
-                } else {
-                    std::cout << "Produsele software din fisier sunt:" << std::endl;
-                    AfiseazaProduse(produse);
-                }
-                break;
-            case 3: {
-                std::cin.ignore();
-                Software produs;
-                std::cout << "Introduceti denumirea: ";
-                getline(std::cin, produs.denumire);
-                std::cout << "Introduceti firma de producere: ";
-                getline(std::cin, produs.firmaDeProducere);
-                std::cout << "Introduceti anul editarii: ";
-                std::cin >> produs.anulEditarii;
-                std::cin.ignore();
-                std::cout << "Introduceti versiunea: ";
-                getline(std::cin, produs.versiune);
-                produse.push_back(produs);
-                std::cout << "Produsul a fost adaugat/modificat." << std::endl;
-                break;
-            }
-            case 4:
-                ScrieProduseInFisier(numeFisier, produse);
-                std::cout << "Produsele au fost salvate in fisier." << std::endl;
-                break;
-            case 5:
-                std::cout << "Programul se inchide." << std::endl;
-                break;
-            default:
-                std::cout << "Optiune invalida. Va rugam sa selectati o optiune valida." << std::endl;
-        }
-    } while (optiune != 5);
-}
-
 int main() {
-    std::string numeFisier = "software.txt";
-    std::vector<Software> produse;
-    Meniu(numeFisier, produse);
-    return 0;
-}
+    Matrix mat1 = readMatrixFromUser();
+    Matrix mat2 = readMatrixFromUser();
 
+    Matrix result = mat1 + mat2;
 
-
-
-
-
-
-
-//punctul b
-#include <iostream>
-
-struct Vector {
-    double* elements;
-    int size;
-};
-
-void init(Vector& vec, int size) {
-    vec.elements = new double[size];
-    vec.size = size;
-}
-
-void destroy(Vector& vec) {
-    delete[] vec.elements;
-    vec.size = 0;
-}
-
-void resize(Vector& vec, int newSize) {
-    double* newElements = new double[newSize];
-    for (int i = 0; i < std::min(vec.size, newSize); ++i) {
-        newElements[i] = vec.elements[i];
-    }
-    delete[] vec.elements;
-    vec.elements = newElements;
-    vec.size = newSize;
-}
-
-void readValues(Vector& vec) {
-    std::cout << "Introduceti valorile pentru vector: ";
-    for (int i = 0; i < vec.size; ++i) {
-        std::cin >> vec.elements[i];
-    }
-}
-
-void printValues(const Vector& vec) {
-    std::cout << "Valorile vectorului sunt: ";
-    for (int i = 0; i < vec.size; ++i) {
-        std::cout << vec.elements[i] << " ";
-    }
-    std::cout << std::endl;
-}
-
-double sumOfEvenElements(const Vector& vec) {
-    double sum = 0.0;
-    for (int i = 0; i < vec.size; ++i) {
-        if (i % 2 == 0) {
-            sum += vec.elements[i];
-        }
-    }
-    return sum;
-}
-
-int main() {
-    Vector myVector;
-
-    int size;
-    std::cout << "Introduceti dimensiunea vectorului: ";
-    std::cin >> size;
-
-    init(myVector, size);
-
-    readValues(myVector);
-
-    printValues(myVector);
-
-    double numarImpar;
-    std::cout << "Introduceti un numar impar pentru inmultire: ";
-    std::cin >> numarImpar;
-
-    for (int i = 0; i < myVector.size; ++i) {
-        myVector.elements[i] *= numarImpar;
-    }
-
-    std::cout << "Vectorul dupa inmultire cu numarul impar:" << std::endl;
-    printValues(myVector);
-
-    destroy(myVector);
+    std::cout << "Rezultatul adunarii matricilor:" << std::endl;
+    printMatrix(result);
 
     return 0;
 }
-
